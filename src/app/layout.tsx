@@ -1,11 +1,14 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { Header } from '../components/Header';
 import { Navigation } from '../components/Navigation';
 
-const inter = Inter({ subsets: ['latin'] });
+const plusJakartaSans = Plus_Jakarta_Sans({ 
+  subsets: ['latin'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Financial Wellness App',
@@ -19,10 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <body className={plusJakartaSans.className}>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
           <Header />
-          <main className="pb-16">
+          <main className="pb-16 px-4 max-w-7xl mx-auto">
             {children}
           </main>
           <Navigation />

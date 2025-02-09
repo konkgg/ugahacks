@@ -48,18 +48,26 @@ export const useUserStore = create<UserStore>((set) => ({
   
   addMoney: (amount: number) => {
     set((state) => {
-      const newTransaction = {
-        id: state.transactions.length + 1,
-        amount: amount * 10,
-        type: 'deposit',
-        description: 'Money Added',
-        date: new Date().toISOString().split('T')[0],
+      if (!state.user) return state;
+      
+      const transactionAmount = amount * 10;
+      const now = new Date();
+      
+      const newTransaction: Transaction = {
+        id: `tx-${Date.now()}`,
+        userId: state.user.id,
+        amount: transactionAmount,
+        type: 'credit',
+        category: 'deposit',
+        timestamp: now,
+        description: 'Account Top Up',
+        tags: ['deposit', 'top-up']
       };
       
       return {
         user: {
           ...state.user,
-          balance: state.user.balance + (amount * 10)
+          balance: state.user.balance + transactionAmount
         },
         isAnimating: true,
         transactions: [newTransaction, ...state.transactions],
@@ -73,18 +81,26 @@ export const useUserStore = create<UserStore>((set) => ({
   
   removeMoney: (amount: number) => {
     set((state) => {
-      const newTransaction = {
-        id: state.transactions.length + 1,
-        amount: amount * 10,
-        type: 'withdrawal',
+      if (!state.user) return state;
+      
+      const transactionAmount = amount * 10;
+      const now = new Date();
+      
+      const newTransaction: Transaction = {
+        id: `tx-${Date.now()}`,
+        userId: state.user.id,
+        amount: transactionAmount,
+        type: 'debit',
+        category: 'withdrawal',
+        timestamp: now,
         description: 'Money Withdrawn',
-        date: new Date().toISOString().split('T')[0],
+        tags: ['withdrawal']
       };
       
       return {
         user: {
           ...state.user,
-          balance: state.user.balance - (amount * 10)
+          balance: state.user.balance - transactionAmount
         },
         isAnimating: true,
         transactions: [newTransaction, ...state.transactions],

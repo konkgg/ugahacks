@@ -25,15 +25,34 @@ export interface User {
   };
   achievements: Achievement[];
   preferences: UserPreferences;
+  transactions: Transaction[];
+  insightStats: {
+    consecutiveDaysViewed: number;
+    lastViewed: Date;
+    totalViews: number;
+  };
+  budgetStats: {
+    goalsSet: number;
+    goalsAchieved: number;
+    monthlyStreak: number;
+    lastUpdated: Date;
+  };
+  investmentStats: {
+    totalInvestments: number;
+    categories: Set<string>;
+    returns: number;
+    lastUpdated: Date;
+  };
 }
 
 export interface Achievement {
   id: string;
   name: string;
   description: string;
-  category: 'savings' | 'streak' | 'transaction' | 'literacy';
+  category: 'savings' | 'streak' | 'transaction' | 'literacy' | 'budget' | 'investment';
   earned: boolean;
   date: Date;
+  target: number;
   progress?: {
     current: number;
     target: number;
@@ -52,10 +71,23 @@ export interface Transaction {
   tags?: string[];
 }
 
+export interface ArtistImage {
+  small: string;
+  medium: string;
+  large: string;
+}
+
+export interface Artist {
+  name: string;
+  images: ArtistImage;
+  url?: string;
+}
+
 export interface Song {
   id: string;
   title: string;
   artist: string;
+  artistImage?: string | null;
   mood: string;
   reason: string;
   url?: string;
@@ -79,10 +111,13 @@ export interface UserStore {
   user: User | null;
   transactions: Transaction[];
   insights: AIInsight[];
+  isAnimating: boolean;
   setUser: (user: User) => void;
   addTransaction: (transaction: Transaction) => void;
   updateBalance: (amount: number) => void;
   updateStreak: () => void;
   addInsight: (insight: AIInsight) => void;
   updateAchievements: (achievement: Achievement) => void;
+  addMoney: (amount: number) => void;
+  removeMoney: (amount: number) => void;
 } 

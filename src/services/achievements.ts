@@ -1,6 +1,6 @@
 import type { User, Transaction, Achievement } from '../types';
 
-const ACHIEVEMENTS = {
+export const ACHIEVEMENTS = {
   SAVINGS_MILESTONES: [
     {
       id: 'savings-100',
@@ -16,6 +16,20 @@ const ACHIEVEMENTS = {
       category: 'savings',
       target: 1000,
     },
+    {
+      id: 'savings-5000',
+      name: 'Savings Expert',
+      description: 'Save $5,000',
+      category: 'savings',
+      target: 5000,
+    },
+    {
+      id: 'savings-10000',
+      name: 'Savings Legend',
+      description: 'Save $10,000',
+      category: 'savings',
+      target: 10000,
+    }
   ],
   STREAK_MILESTONES: [
     {
@@ -32,6 +46,20 @@ const ACHIEVEMENTS = {
       category: 'streak',
       target: 30,
     },
+    {
+      id: 'streak-90',
+      name: 'Quarterly Champion',
+      description: 'Maintain a 90-day login streak',
+      category: 'streak',
+      target: 90,
+    },
+    {
+      id: 'streak-365',
+      name: 'Year of Excellence',
+      description: 'Maintain a 365-day login streak',
+      category: 'streak',
+      target: 365,
+    }
   ],
   TRANSACTION_MILESTONES: [
     {
@@ -48,7 +76,90 @@ const ACHIEVEMENTS = {
       category: 'transaction',
       target: 100,
     },
+    {
+      id: 'transactions-500',
+      name: 'Transaction Master',
+      description: 'Complete 500 transactions',
+      category: 'transaction',
+      target: 500,
+    },
+    {
+      id: 'transactions-1000',
+      name: 'Transaction Legend',
+      description: 'Complete 1,000 transactions',
+      category: 'transaction',
+      target: 1000,
+    }
   ],
+  FINANCIAL_LITERACY: [
+    {
+      id: 'literacy-first-insight',
+      name: 'Financial Learner',
+      description: 'View your first financial insight',
+      category: 'literacy',
+      target: 1,
+    },
+    {
+      id: 'literacy-week-insights',
+      name: 'Weekly Analyst',
+      description: 'View financial insights for 7 consecutive days',
+      category: 'literacy',
+      target: 7,
+    },
+    {
+      id: 'literacy-month-insights',
+      name: 'Financial Advisor',
+      description: 'View financial insights for 30 consecutive days',
+      category: 'literacy',
+      target: 30,
+    }
+  ],
+  BUDGET_GOALS: [
+    {
+      id: 'budget-first-goal',
+      name: 'Goal Setter',
+      description: 'Set your first budget goal',
+      category: 'budget',
+      target: 1,
+    },
+    {
+      id: 'budget-goal-achieved',
+      name: 'Goal Achiever',
+      description: 'Achieve your first budget goal',
+      category: 'budget',
+      target: 1,
+    },
+    {
+      id: 'budget-streak-3',
+      name: 'Budget Master',
+      description: 'Achieve budget goals for 3 consecutive months',
+      category: 'budget',
+      target: 3,
+    }
+  ],
+  INVESTMENT_MILESTONES: [
+    {
+      id: 'investment-first',
+      name: 'First Investment',
+      description: 'Make your first investment',
+      category: 'investment',
+      target: 1,
+    },
+    {
+      id: 'investment-diverse',
+      name: 'Diverse Portfolio',
+      description: 'Invest in 3 different categories',
+      category: 'investment',
+      target: 3,
+    },
+    {
+      id: 'investment-growth',
+      name: 'Growth Investor',
+      description: 'Achieve 10% return on investments',
+      category: 'investment',
+      target: 10,
+    }
+  ]
 } as const;
 
 export const checkAchievements = (user: User, transactions: Transaction[]): Achievement[] => {
@@ -99,6 +210,85 @@ export const checkAchievements = (user: User, transactions: Transaction[]): Achi
         date: new Date(),
         progress: {
           current: transactionCount,
+          target: milestone.target,
+        },
+      });
+    }
+  });
+
+  // Check financial literacy achievements
+  const insightViewDays = user.insightStats?.consecutiveDaysViewed || 0;
+  ACHIEVEMENTS.FINANCIAL_LITERACY.forEach(milestone => {
+    if (insightViewDays >= milestone.target && !existingAchievementIds.has(milestone.id)) {
+      newAchievements.push({
+        ...milestone,
+        earned: true,
+        date: new Date(),
+        progress: {
+          current: insightViewDays,
+          target: milestone.target,
+        },
+      });
+    }
+  });
+
+  // Check budget achievements
+  const budgetGoals = user.budgetStats || { goalsSet: 0, goalsAchieved: 0, monthlyStreak: 0 };
+  ACHIEVEMENTS.BUDGET_GOALS.forEach(milestone => {
+    let current = 0;
+    switch (milestone.id) {
+      case 'budget-first-goal':
+        current = budgetGoals.goalsSet;
+        break;
+      case 'budget-goal-achieved':
+        current = budgetGoals.goalsAchieved;
+        break;
+      case 'budget-streak-3':
+        current = budgetGoals.monthlyStreak;
+        break;
+    }
+    
+    if (current >= milestone.target && !existingAchievementIds.has(milestone.id)) {
+      newAchievements.push({
+        ...milestone,
+        earned: true,
+        date: new Date(),
+        progress: {
+          current,
+          target: milestone.target,
+        },
+      });
+    }
+  });
+
+  // Check investment achievements
+  const investmentStats = user.investmentStats || { 
+    totalInvestments: 0, 
+    categories: new Set(), 
+    returns: 0 
+  };
+  
+  ACHIEVEMENTS.INVESTMENT_MILESTONES.forEach(milestone => {
+    let current = 0;
+    switch (milestone.id) {
+      case 'investment-first':
+        current = investmentStats.totalInvestments;
+        break;
+      case 'investment-diverse':
+        current = investmentStats.categories.size;
+        break;
+      case 'investment-growth':
+        current = investmentStats.returns;
+        break;
+    }
+    
+    if (current >= milestone.target && !existingAchievementIds.has(milestone.id)) {
+      newAchievements.push({
+        ...milestone,
+        earned: true,
+        date: new Date(),
+        progress: {
+          current,
           target: milestone.target,
         },
       });

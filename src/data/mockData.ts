@@ -1,66 +1,6 @@
 import { User, Transaction } from '../types';
 import mockData from './mockData.json';
 
-export const mockUser: User = {
-  id: '1',
-  name: 'John Doe',
-  email: 'john@example.com',
-  balance: 1250.75,
-  streak: {
-    current: 3,
-    lastLogin: new Date(),
-    highestStreak: 3,
-    multiplier: 1,
-    streakProtection: 1,
-  },
-  preferences: {
-    theme: 'light',
-    notificationsEnabled: true,
-    musicPreferences: {
-      genres: ['pop', 'rock'],
-      favoriteArtists: ['Various'],
-    },
-    privacySettings: {
-      shareInsights: true,
-      shareAchievements: true,
-    },
-  },
-  achievements: [
-    {
-      id: '1',
-      name: 'First Login',
-      description: 'Complete your first login',
-      category: 'streak',
-      earned: true,
-      date: new Date('2024-01-01'),
-    },
-    {
-      id: '2',
-      name: '3 Day Streak',
-      description: 'Login for 3 consecutive days',
-      category: 'streak',
-      earned: true,
-      date: new Date('2024-01-03'),
-    },
-    {
-      id: '3',
-      name: 'First Transaction',
-      description: 'Complete your first transaction',
-      category: 'transaction',
-      earned: true,
-      date: new Date('2024-01-02'),
-    },
-    {
-      id: '4',
-      name: '10 Transactions',
-      description: 'Complete 10 transactions',
-      category: 'transaction',
-      earned: false,
-      date: new Date(),
-    },
-  ],
-};
-
 export const mockTransactions: Transaction[] = [
   {
     id: '1',
@@ -99,6 +39,97 @@ export const mockTransactions: Transaction[] = [
     description: 'Netflix subscription',
   },
 ];
+
+export const mockUser: User = {
+  id: '1',
+  name: 'John Doe',
+  email: 'john@example.com',
+  balance: 1250.75,
+  streak: {
+    current: 3,
+    lastLogin: new Date(),
+    highestStreak: 3,
+    multiplier: 1,
+    streakProtection: 1,
+  },
+  preferences: {
+    theme: 'light',
+    notificationsEnabled: true,
+    musicPreferences: {
+      genres: ['pop', 'rock'],
+      favoriteArtists: ['Various'],
+    },
+    privacySettings: {
+      shareInsights: true,
+      shareAchievements: true,
+    },
+  },
+  transactions: mockTransactions,
+  insightStats: {
+    consecutiveDaysViewed: 3,
+    lastViewed: new Date(),
+    totalViews: 15,
+  },
+  budgetStats: {
+    goalsSet: 2,
+    goalsAchieved: 1,
+    monthlyStreak: 1,
+    lastUpdated: new Date(),
+  },
+  investmentStats: {
+    totalInvestments: 3,
+    categories: new Set(['stocks', 'bonds']),
+    returns: 8.5,
+    lastUpdated: new Date(),
+  },
+  achievements: [
+    {
+      id: '1',
+      name: 'First Login',
+      description: 'Complete your first login',
+      category: 'streak',
+      earned: true,
+      date: new Date('2024-01-01'),
+      target: 1,
+    },
+    {
+      id: '2',
+      name: '3 Day Streak',
+      description: 'Login for 3 consecutive days',
+      category: 'streak',
+      earned: true,
+      date: new Date('2024-01-03'),
+      target: 3,
+    },
+    {
+      id: '3',
+      name: 'First Transaction',
+      description: 'Complete your first transaction',
+      category: 'transaction',
+      earned: true,
+      date: new Date('2024-01-02'),
+      target: 1,
+    },
+    {
+      id: 'budget-first-goal',
+      name: 'Goal Setter',
+      description: 'Set your first budget goal',
+      category: 'budget',
+      earned: true,
+      date: new Date('2024-01-15'),
+      target: 1,
+    },
+    {
+      id: 'investment-first',
+      name: 'First Investment',
+      description: 'Make your first investment',
+      category: 'investment',
+      earned: true,
+      date: new Date('2024-02-01'),
+      target: 1,
+    },
+  ],
+};
 
 // Type assertion if needed
 export const typedMockData = mockData as {

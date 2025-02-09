@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import { CreditCard, Send, Wallet, ChevronRight, Music, TrendingUp } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
 import { generateFinancialInsights } from '../services/openai';
-import type { Transaction, AIInsight } from '../types';
+import { enrichSongsWithArtistInfo } from '../utils/artistUtils';
+import Playlist from './Playlist';
+import type { Transaction, AIInsight, Song } from '../types';
 
 const QuickAction = ({ icon: Icon, label, onClick }: { icon: any; label: string; onClick: () => void }) => (
   <button
@@ -19,49 +21,129 @@ const QuickAction = ({ icon: Icon, label, onClick }: { icon: any; label: string;
 const TransactionItem = ({ transaction }: { transaction: Transaction }) => (
   <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
     <div className="flex items-center space-x-4">
-      <div className={`p-2 rounded-full ${transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'}`}>
+      <div className={`p-2 rounded-full ${
+        transaction.type === 'credit' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'
+      }`}>
         {transaction.type === 'credit' ? '+' : '-'}
       </div>
       <div>
         <p className="font-medium">{transaction.description}</p>
-        <p className="text-sm text-gray-500">{new Date(transaction.timestamp).toLocaleDateString()}</p>
+        <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+          <span>{new Date(transaction.timestamp).toLocaleString()}</span>
+          <span>•</span>
+          <span className="capitalize">{transaction.category}</span>
+          {transaction.tags && transaction.tags.length > 0 && (
+            <>
+              <span>•</span>
+              <div className="flex gap-1">
+                {transaction.tags.map((tag, index) => (
+                  <span key={index} className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
-    <span className={`font-bold ${transaction.type === 'credit' ? 'text-green-500' : 'text-red-500'}`}>
+    <span className={`font-bold ${
+      transaction.type === 'credit' ? 'text-green-500 dark:text-green-400' : 'text-red-500 dark:text-red-400'
+    }`}>
       ${Math.abs(transaction.amount).toFixed(2)}
     </span>
   </div>
 );
 
 export const Dashboard = () => {
-  const { user, transactions } = useUserStore();
+  const { user, transactions, addMoney, removeMoney, addTransaction } = useUserStore();
   const [currentInsight, setCurrentInsight] = useState<AIInsight | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [enrichedPlaylist, setEnrichedPlaylist] = useState<Song[]>([]);
+  const [amount, setAmount] = useState<number>(0);
+
+  const handleTransaction = (type: 'send' | 'pay' | 'topup') => {
+    if (!user) return;
+    
+    const transactionAmount = 10; // Default amount for demonstration
+    
+    switch (type) {
+      case 'send':
+        if (user.balance >= transactionAmount) {
+          removeMoney(1); // Removes $10 and creates transaction
+        }
+        break;
+      case 'pay':
+        if (user.balance >= transactionAmount) {
+          removeMoney(1); // Removes $10 and creates transaction
+        }
+        break;
+      case 'topup':
+        addMoney(1); // Adds $10 and creates transaction
+        break;
+    }
+
+    // Trigger insights refresh
+    loadInsights();
+  };
+
+  const loadInsights = async () => {
+    if (!user || !transactions.length) return;
+    
+    setIsLoading(true);
+    setError(null);
+    try {
+      const insight = await generateFinancialInsights(transactions, user.id)
+        .catch(error => {
+          console.error('Failed to generate insights:', error);
+          throw new Error('Could not generate financial insights. Please try again later.');
+        });
+      
+      setCurrentInsight(insight);
+      
+      // Enrich songs with artist info
+      if (insight.playlist?.length) {
+        try {
+          const enrichedSongs = await enrichSongsWithArtistInfo(insight.playlist)
+            .catch(error => {
+              console.error('Failed to enrich songs:', error);
+              return insight.playlist; // Fallback to original playlist without enrichment
+            });
+          setEnrichedPlaylist(enrichedSongs);
+        } catch (err) {
+          console.error('Error enriching songs:', err);
+          setEnrichedPlaylist(insight.playlist); // Fallback to original playlist
+        }
+      }
+    } catch (err) {
+      console.error('Dashboard error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadInsights = async () => {
-      if (!user || !transactions.length) return;
-      
-      setIsLoading(true);
-      setError(null);
-      try {
-        const insight = await generateFinancialInsights(transactions, user.id);
-        setCurrentInsight(insight);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to generate insights');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadInsights();
   }, [user?.id, transactions]);
 
   const quickActions = [
-    { icon: Send, label: 'Send', onClick: () => {} },
-    { icon: CreditCard, label: 'Pay', onClick: () => {} },
-    { icon: Wallet, label: 'Top Up', onClick: () => {} },
+    { 
+      icon: Send, 
+      label: 'Send', 
+      onClick: () => handleTransaction('send')
+    },
+    { 
+      icon: CreditCard, 
+      label: 'Pay', 
+      onClick: () => handleTransaction('pay')
+    },
+    { 
+      icon: Wallet, 
+      label: 'Top Up', 
+      onClick: () => handleTransaction('topup')
+    },
   ];
 
   return (
@@ -154,25 +236,7 @@ export const Dashboard = () => {
             ))}
           </div>
         ) : (
-          <div className="space-y-4">
-            {currentInsight?.playlist?.map((song) => (
-              <div key={song.id} className="flex items-center space-x-4 group hover:bg-gray-50 dark:hover:bg-gray-700/50 p-2 rounded-lg transition-colors">
-                <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center group-hover:bg-gray-300 dark:group-hover:bg-gray-600 transition-colors">
-                  <Music className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-                </div>
-                <div>
-                  <p className="font-medium">{song.title}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{song.artist}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 line-clamp-2">{song.reason}</p>
-                </div>
-              </div>
-            ))}
-            {!currentInsight?.playlist?.length && (
-              <p className="text-gray-500 dark:text-gray-400 text-center py-4">
-                No songs in your financial mood mix yet
-              </p>
-            )}
-          </div>
+          <Playlist tracks={currentInsight?.playlist || []} />
         )}
       </div>
 
