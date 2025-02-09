@@ -1,7 +1,8 @@
 'use client';
 
-import { Sparkles, Award } from 'lucide-react';
+import { Award } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
+import { ImageUploadButton } from './ImageUploadButton';
 
 export const Header = () => {
   const { user } = useUserStore();
@@ -18,9 +19,7 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center">
-          <button className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800">
-            <Sparkles className="w-6 h-6 text-primary" />
-          </button>
+          <ImageUploadButton />
         </div>
       </div>
     </header>
