@@ -25,17 +25,17 @@ export async function generateFinancialInsights(transactions: Transaction[], use
     "trends": ["trend1", "trend2"],
     "recommendations": ["recommendation1", "recommendation2"]
   },
-  "playlist": [  // Must contain between 5-7 songs, inclusive
+  "playlist": [  // Must contain between 5-7 songs, inclusive. 40% of songs should be inspired by transaction categories/types (e.g., shopping, dining, travel) rather than financial amounts
     {
       "id": "unique-id",
       "title": "Song Title",
       "artist": "Artist Name",
       "mood": "happy/sad/etc",
-      "reason": "Why this song matches the financial mood"
+      "reason": "Why this song matches the financial mood or transaction category"
     }
   ]
 }
-Note: The playlist MUST contain between 5 and 7 songs, no more and no less.`
+Note: The playlist MUST contain between 5 and 7 songs, no more and no less. Approximately 40% of the songs should be themed around transaction categories and activities rather than financial amounts.`
       },
       {
         role: "user",
