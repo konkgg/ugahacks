@@ -107,11 +107,15 @@ export interface AIInsight {
   playlist: Song[];
 }
 
-export interface UserStore {
+export interface UserState {
   user: User | null;
   transactions: Transaction[];
   insights: AIInsight[];
   isAnimating: boolean;
+  isHydrated: boolean;
+}
+
+export interface UserStore extends UserState {
   setUser: (user: User) => void;
   addTransaction: (transaction: Transaction) => void;
   updateBalance: (amount: number) => void;
@@ -120,4 +124,5 @@ export interface UserStore {
   updateAchievements: (achievement: Achievement) => void;
   addMoney: (amount: number) => void;
   removeMoney: (amount: number) => void;
+  hydrateStore: () => void;
 } 

@@ -5,28 +5,34 @@ import { Dashboard } from '../components/Dashboard';
 import { useUserStore } from '../store/userStore';
 import { generateFinancialInsights } from '../services/openai';
 import { checkAchievements, updateStreak } from '../services/achievements';
+import { generateRandomUser } from '../utils/mockDataGenerator';
 
 export default function Home() {
   const { user, transactions, setUser } = useUserStore();
 
   useEffect(() => {
-    if (user) {
-      // Update streak on page load
-      const updatedUser = updateStreak(user);
-      setUser(updatedUser);
-
-      // Check for new achievements
-      const newAchievements = checkAchievements(updatedUser, transactions);
-      if (newAchievements.length > 0) {
-        setUser({
-          ...updatedUser,
-          achievements: [...updatedUser.achievements, ...newAchievements],
-        });
-      }
-
-      // Generate new insights
-      generateFinancialInsights(transactions, user.id).catch(console.error);
+    // Create a user if one doesn't exist
+    if (!user) {
+      const newUser = generateRandomUser();
+      setUser(newUser);
+      return;
     }
+
+    // Rest of the useEffect logic for existing users
+    const updatedUser = updateStreak(user);
+    setUser(updatedUser);
+
+    // Check for new achievements
+    const newAchievements = checkAchievements(updatedUser, transactions);
+    if (newAchievements.length > 0) {
+      setUser({
+        ...updatedUser,
+        achievements: [...updatedUser.achievements, ...newAchievements],
+      });
+    }
+
+    // Generate new insights
+    generateFinancialInsights(transactions, user.id).catch(console.error);
   }, [user?.id]);
 
   if (!user) {

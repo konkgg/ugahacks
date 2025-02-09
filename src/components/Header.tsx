@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Sparkles, Award } from 'lucide-react';
 import { useUserStore } from '../store/userStore';
 

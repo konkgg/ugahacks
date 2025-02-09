@@ -63,24 +63,28 @@ export const Dashboard = () => {
   const [enrichedPlaylist, setEnrichedPlaylist] = useState<Song[]>([]);
   const [amount, setAmount] = useState<number>(0);
 
+  const getRandomAmount = (min: number, max: number): number => {
+    return Number((Math.random() * (max - min) + min).toFixed(2));
+  };
+
   const handleTransaction = (type: 'send' | 'pay' | 'topup') => {
-    if (!user) return;
+    if (!user?.balance) return;
     
-    const transactionAmount = 10; // Default amount for demonstration
+    const amount = getRandomAmount(10, 1500);
     
     switch (type) {
       case 'send':
-        if (user.balance >= transactionAmount) {
-          removeMoney(1); // Removes $10 and creates transaction
+        if (user.balance >= amount) {
+          removeMoney(amount);
         }
         break;
       case 'pay':
-        if (user.balance >= transactionAmount) {
-          removeMoney(1); // Removes $10 and creates transaction
+        if (user.balance >= amount) {
+          removeMoney(amount);
         }
         break;
       case 'topup':
-        addMoney(1); // Adds $10 and creates transaction
+        addMoney(amount);
         break;
     }
 
@@ -91,42 +95,66 @@ export const Dashboard = () => {
   const loadInsights = async () => {
     if (!user || !transactions.length) return;
     
-    setIsLoading(true);
-    setError(null);
-    try {
-      const insight = await generateFinancialInsights(transactions, user.id)
-        .catch(error => {
-          console.error('Failed to generate insights:', error);
-          throw new Error('Could not generate financial insights. Please try again later.');
-        });
+    const lastInsightTime = localStorage.getItem('lastInsightTime');
+    const lastTransactionCount = localStorage.getItem('lastTransactionCount');
+    const currentTime = new Date().getTime();
+    
+    // Only regenerate insights if:
+    // 1. We don't have a last insight time
+    // 2. It's been more than 1 hour since last generation
+    // 3. The number of transactions has changed
+    if (!lastInsightTime || 
+        currentTime - parseInt(lastInsightTime) > 3600000 || 
+        lastTransactionCount !== transactions.length.toString()) {
       
-      setCurrentInsight(insight);
-      
-      // Enrich songs with artist info
-      if (insight.playlist?.length) {
-        try {
-          const enrichedSongs = await enrichSongsWithArtistInfo(insight.playlist)
-            .catch(error => {
-              console.error('Failed to enrich songs:', error);
-              return insight.playlist; // Fallback to original playlist without enrichment
-            });
-          setEnrichedPlaylist(enrichedSongs);
-        } catch (err) {
-          console.error('Error enriching songs:', err);
-          setEnrichedPlaylist(insight.playlist); // Fallback to original playlist
+      setIsLoading(true);
+      setError(null);
+      try {
+        const insight = await generateFinancialInsights(transactions, user.id)
+          .catch(error => {
+            console.error('Failed to generate insights:', error);
+            throw new Error('Could not generate financial insights. Please try again later.');
+          });
+        
+        setCurrentInsight(insight);
+        
+        // Store the current time and transaction count
+        localStorage.setItem('lastInsightTime', currentTime.toString());
+        localStorage.setItem('lastTransactionCount', transactions.length.toString());
+        
+        // Enrich songs with artist info
+        if (insight.playlist?.length) {
+          try {
+            const enrichedSongs = await enrichSongsWithArtistInfo(insight.playlist)
+              .catch(error => {
+                console.error('Failed to enrich songs:', error);
+                return insight.playlist; // Fallback to original playlist without enrichment
+              });
+            setEnrichedPlaylist(enrichedSongs);
+          } catch (err) {
+            console.error('Error enriching songs:', err);
+            setEnrichedPlaylist(insight.playlist); // Fallback to original playlist
+          }
         }
+      } catch (err) {
+        console.error('Dashboard error:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error('Dashboard error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    // Load insights when component mounts or when user/transactions change
     loadInsights();
-  }, [user?.id, transactions]);
+    
+    // Clear localStorage when component unmounts
+    return () => {
+      localStorage.removeItem('lastInsightTime');
+      localStorage.removeItem('lastTransactionCount');
+    };
+  }, [user?.id, transactions.length]); // Only depend on user ID and transaction count
 
   const quickActions = [
     { 
